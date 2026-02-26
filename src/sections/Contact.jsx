@@ -1,3 +1,5 @@
+import { FaInstagram, FaGithub, FaLinkedin } from "react-icons/fa";
+
 const Contact = () => {
     return (
         <section className="relative py-32 px-6 overflow-hidden bg-black text-center">
@@ -26,24 +28,49 @@ const Contact = () => {
                     and cinematic visual storytelling projects.
                 </p>
 
-                {/* CTA */}
+                {/* CTA Buttons */}
                 <div className="mt-14 flex flex-col sm:flex-row justify-center gap-6">
 
                     <a
                         href="mailto:ayushgupta9510@gmail.com"
-                        className="group relative px-12 py-4 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 font-semibold overflow-hidden"
+                        className="group relative px-12 py-4 rounded-full 
+                        bg-gradient-to-r from-blue-600 to-purple-600 
+                        font-semibold overflow-hidden hover:scale-105 transition"
                     >
                         <span className="relative z-10">Start a Project</span>
                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition" />
+                    </a>
+
+                </div>
+
+                {/* Social Icons */}
+                <div className="mt-12 flex justify-center gap-8 text-zinc-400">
+
+                    <a
+                        href="https://github.com/theayushgupta21"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-2xl hover:text-white hover:scale-125 transition"
+                    >
+                        <FaGithub />
+                    </a>
+
+                    <a
+                        href="https://www.linkedin.com/in/theayushgupta21"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-2xl hover:text-blue-500 hover:scale-125 transition"
+                    >
+                        <FaLinkedin />
                     </a>
 
                     <a
                         href="https://www.instagram.com/portraitwalagallery"
                         target="_blank"
                         rel="noreferrer"
-                        className="px-12 py-4 rounded-full border border-zinc-700 text-zinc-300 hover:border-blue-500 hover:text-white transition"
+                        className="text-2xl hover:text-pink-500 hover:scale-125 transition"
                     >
-                        Instagram
+                        <FaInstagram />
                     </a>
 
                 </div>
