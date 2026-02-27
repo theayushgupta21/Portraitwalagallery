@@ -1,6 +1,6 @@
 import About from "./sections/About";
 import Hero from "./sections/Hero";
-import Contact from "./sections/contact";
+import Contact from "./sections/Contact"; // ✅ FIXED
 import Footer from "./sections/Footer";
 import Skills from "./sections/Skills";
 
