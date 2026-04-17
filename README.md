@@ -1,17 +1,65 @@
-# React + Vite
+# 📽️ Portraitwala Gallery | Cinematic Visual Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A high-end, cinematic portfolio designed for **Ayush Gupta**, a professional Visual Storyteller, Director, and Photographer. This application features a premium dark-aesthetic UI, fluid animations, and a focus on high-retention visual storytelling.
 
-Currently, two official plugins are available:
+![Portfolio Preview](https://img.shields.io/badge/Aesthetic-Cinematic-blue?style=for-the-badge)
+![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20Tailwind%204%20%7C%20Framer%20Motion-purple?style=for-the-badge)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Premium Features
 
-## React Compiler
+- **🎬 Cinematic Experience**: Built with a "Director's Cut" aesthetic, featuring dark modes, grain overlays, and vignette effects.
+- **⚡ Fluid Animations**: Powered by **Framer Motion** for staggered reveals, parallax scrolling, and smooth section transitions.
+- **✨ Glassmorphism UI**: Modern, glass-card based design system with advanced backdrop blurs and subtle borders.
+- **🌌 3D Particle Background**: Interactive Three.js (React Three Fiber) particle systems that react to mouse movement.
+- **📱 Fully Responsive**: Meticulously designed for all devices, from mobile smartphones to ultra-wide displays.
+- **🖼️ Asymmetric Portfolio Grid**: A "Bento-grid" inspired layout that treats every photo and video as a piece of art.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend**: [React.js](https://reactjs.org/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) (modern variables and utility-first approach)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **3D Graphics**: [Three.js](https://threejs.org/) & [React Three Fiber](https://docs.pmnd.rs/react-three-fiber/)
+- **Icons**: [Lucide React](https://lucide.dev/) & [React Icons](https://react-icons.github.io/react-icons/)
+- **Fonts**: Outfit (Display) & Inter (Body)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-"# Portraitwalagallery" 
+## 📦 Installation & Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/theayushgupta21/Portraitwalagallery.git
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Run in development mode**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for production**
+   ```bash
+   npm run build
+   ```
+
+## 🎥 Sections
+
+- **Hero**: Massive typography with cinematic parallax effects.
+- **About**: "The Visual Architect" – defining the man behind the lens.
+- **Experience**: Timeline of professional milestones and expertise.
+- **Portfolio**: Curated collection of photography, reels, and YouTube content.
+- **Contact**: High-impact social grid (Instagram, YouTube, LinkedIn).
+
+## 🤝 Let's Connect
+
+- **Instagram**: [@portraitwalagallery](https://www.instagram.com/portraitwalagallery)
+- **LinkedIn**: [Ayush Gupta](https://www.linkedin.com/in/theayushgupta21)
+- **YouTube**: [Portraitwala](https://www.youtube.com/@ayushgupta-portraitwala)
+- **Email**: ayushgupta9510@gmail.com
+
+---
+
+*Designed & Developed with ❤️ by Ayush Gupta*
