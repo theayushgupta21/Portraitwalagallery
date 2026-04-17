@@ -1,90 +1,90 @@
-import { FaInstagram, FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaInstagram, FaYoutube, FaLinkedin } from "react-icons/fa";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 
 const Contact = () => {
+    const containerRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start end", "end end"]
+    });
+
+    const yVal = useTransform(scrollYProgress, [0, 1], ["50%", "0%"]);
+
+    const socials = [
+        { name: "Instagram", icon: FaInstagram, href: "https://www.instagram.com/portraitwalagallery", color: "text-pink-500", hoverBg: "hover:bg-pink-500/10", border: "hover:border-pink-500" },
+        { name: "YouTube", icon: FaYoutube, href: "https://www.youtube.com/@ayushgupta-portraitwala", color: "text-red-500", hoverBg: "hover:bg-red-500/10", border: "hover:border-red-500" },
+        { name: "LinkedIn", icon: FaLinkedin, href: "https://www.linkedin.com/in/theayushgupta21", color: "text-blue-500", hoverBg: "hover:bg-blue-500/10", border: "hover:border-blue-500" }
+    ];
+
     return (
-        <section className="relative py-32 px-6 overflow-hidden bg-black text-center">
+        <section id="contact" ref={containerRef} className="relative min-h-[90vh] py-32 px-6 overflow-hidden bg-[#050505] flex items-center justify-center">
 
-            {/* Glow Effects */}
-            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/30 rounded-full blur-[180px]" />
-            <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-600/30 rounded-full blur-[160px]" />
+            {/* Cinematic Ambience */}
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[200px]" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/15 rounded-full blur-[200px]" />
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDUwNTA1Ij48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMxMTEiPjwvcmVjdD4KPC9zdmc+')] opacity-20 pointer-events-none" />
 
-            {/* Content */}
-            <div className="relative z-10 max-w-4xl mx-auto">
+            <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col items-center">
+                
+                {/* Title */}
+                <motion.div style={{ y: yVal }} className="text-center w-full">
+                    <p className="text-blue-500 uppercase tracking-[0.5em] text-sm font-bold mb-6">Let's Work Together</p>
+                    <h2 className="text-6xl md:text-8xl lg:text-[9rem] font-black uppercase tracking-tighter leading-none mb-10 w-full flex flex-col items-center">
+                        <span className="block text-zinc-200">Start A</span>
+                        <span className="block bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-x mt-[-10px]">
+                            Project
+                        </span>
+                    </h2>
 
-                {/* Heading */}
-                <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                    Let’s Create
-                    <span className="block bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                        Something Powerful
-                    </span>
-                </h2>
+                    <p className="mt-8 text-zinc-400 text-lg md:text-2xl font-light max-w-3xl mx-auto leading-relaxed">
+                        Whether it’s a cinematic masterpiece, a compelling brand story, or a stunning visual campaign. Connect with me directly and let's craft magic.
+                    </p>
 
-                {/* Divider */}
-                <div className="mx-auto mt-6 h-[1px] w-24 bg-gradient-to-r from-blue-500 to-purple-600" />
+                    {/* Email CTA */}
+                    <div className="mt-16 mb-20">
+                        <motion.a
+                            href="mailto:ayushgupta9510@gmail.com"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="inline-flex items-center justify-center relative px-12 py-6 rounded-full bg-white text-black font-black text-xl tracking-[0.2em] uppercase overflow-hidden group shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.3)] transition-all duration-500"
+                        >
+                            <span className="relative z-10">Get In Touch</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-purple-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        </motion.a>
+                    </div>
+                </motion.div>
 
-                {/* Description */}
-                <p className="mt-8 text-zinc-400 text-lg md:text-xl leading-relaxed">
-                    Open for collaborations, brand work, events,
-                    and cinematic visual storytelling projects.
-                </p>
-
-                {/* CTA Buttons */}
-                <div className="mt-14 flex flex-col sm:flex-row justify-center gap-6">
-
-                    <a
-                        href="mailto:ayushgupta9510@gmail.com"
-                        className="group relative px-12 py-4 rounded-full 
-                        bg-gradient-to-r from-blue-600 to-purple-600 
-                        font-semibold overflow-hidden hover:scale-105 transition"
-                    >
-                        <span className="relative z-10">Start a Project</span>
-                        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition" />
-                    </a>
-
+                {/* Massive Social Grid */}
+                <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 border-t border-zinc-800/50">
+                    {socials.map((social, idx) => (
+                        <motion.a
+                            key={idx}
+                            href={social.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.1, duration: 0.5 }}
+                            className={`flex flex-col items-center justify-center gap-6 p-12 rounded-3xl glass-card border-transparent transition-all duration-500 ${social.hoverBg} ${social.border} group`}
+                        >
+                            <social.icon className={`text-6xl md:text-8xl ${social.color} opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 drop-shadow-xl`} />
+                            <span className="text-xl md:text-2xl font-bold tracking-widest text-zinc-300 group-hover:text-white transition-colors uppercase">
+                                {social.name}
+                            </span>
+                        </motion.a>
+                    ))}
                 </div>
 
-                {/* Social Icons */}
-                <div className="mt-12 flex justify-center gap-8 text-zinc-400">
-
-                    <a
-                        href="https://github.com/theayushgupta21"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-2xl hover:text-white hover:scale-125 transition"
-                    >
-                        <FaGithub />
-                    </a>
-
-                    <a
-                        href="https://www.linkedin.com/in/theayushgupta21"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-2xl hover:text-blue-500 hover:scale-125 transition"
-                    >
-                        <FaLinkedin />
-                    </a>
-
-                    <a
-                        href="https://www.instagram.com/portraitwalagallery"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-2xl hover:text-pink-500 hover:scale-125 transition"
-                    >
-                        <FaInstagram />
-                    </a>
-
+                <div className="mt-20">
+                    <p className="text-zinc-600 text-[10px] tracking-[0.5em] uppercase font-bold text-center">
+                        Available Worldwide • Based in India
+                    </p>
                 </div>
-
-                {/* Sub Text */}
-                <p className="mt-10 text-sm text-zinc-500 tracking-wide">
-                    Based in India • Available Worldwide
-                </p>
             </div>
-
-            {/* Bottom Fade */}
-            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent" />
         </section>
     );
 };
 
-export default Contact;
+export default Contact;
