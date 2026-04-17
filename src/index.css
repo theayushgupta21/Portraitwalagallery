@@ -64,6 +64,30 @@ body {
   transform: translateY(-5px);
 }
 
+/* Advanced Modern Glass */
+.glass-modern {
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.8),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.glass-modern-hover {
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.glass-modern-hover:hover {
+  background: rgba(20, 20, 20, 0.6);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 
+    0 20px 80px 0 rgba(0, 0, 0, 0.9),
+    inset 0 0 40px rgba(59, 130, 246, 0.15);
+  transform: scale(1.02) translateY(-8px);
+}
+
 /* Custom Selection */
 ::selection {
   background: rgba(59, 130, 246, 0.5);
