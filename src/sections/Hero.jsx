@@ -1,167 +1,217 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
-import ThreeBackground from "../compornetns/ThreeBackground";
+import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+
+/* ---------- Add to index.html <head> (fonts) ----------
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+-------------------------------------------------------
+
+   CONCEPT: the whole hero is a camera viewfinder. Three scenes sit at different depths
+   (Portraits near, Ayush mid, Film far). The visitor pulls focus with the lens ring:
+   whatever is at the focus distance turns sharp, everything else melts into bokeh.
+   Rack focus is a filmmaker's move, so the page itself shows what you do. */
+
+const DISPLAY = { fontFamily: '"Bricolage Grotesque", system-ui, sans-serif' };
+const MONO = { fontFamily: '"IBM Plex Mono", ui-monospace, monospace' };
+const RED = "#ff4b3e";
+
+// d = position on the focus ring (0 near, 1 far)
+const STOPS = [
+    { d: 0.08, label: "Portraits", dist: "0.8 m", text: "Faces, held a second longer. Emotive portraits shot in natural light." },
+    { d: 0.5, label: "Ayush Gupta", dist: "2.5 m", text: "Director, editor and photographer. I turn ordinary moments into cinematic ones." },
+    { d: 0.92, label: "Film", dist: "infinity", text: "Stories cut with rhythm and graded with feeling. High-end video editing." },
+];
+
+// Replace img with your own photo URLs, e.g. "/photos/portrait.jpg"
+const PORTRAIT = { img: "", c: ["#d8a48a", "#3a2220", "#120d0d"] };
+const FILM = { img: "", c: ["#4fb3b8", "#2b2238", "#0c0b12"] };
+const bg = (p) =>
+    p.img
+        ? { backgroundImage: `url(${p.img})`, backgroundSize: "cover", backgroundPosition: "center" }
+        : { background: `radial-gradient(circle at 35% 25%, ${p.c[0]}, transparent 60%), linear-gradient(160deg, ${p.c[1]}, ${p.c[2]})` };
+
+// [left %, top %, size px, depth, tint]
+const BOKEH = [
+    [8, 14, 90, 0.1, "#ffe3c2"], [22, 70, 60, 0.05, "#ff8a70"], [38, 8, 120, 0.5, "#ffe3c2"], [55, 80, 80, 0.92, "#ffe3c2"],
+    [70, 16, 70, 0.5, "#ff8a70"], [86, 58, 130, 0.92, "#ffe3c2"], [92, 12, 60, 0.08, "#ffe3c2"], [15, 46, 50, 0.92, "#ff8a70"],
+    [48, 52, 40, 0.08, "#ffe3c2"], [64, 34, 150, 0.5, "#ffe3c2"], [30, 88, 100, 0.5, "#ff8a70"], [78, 86, 60, 0.08, "#ffe3c2"],
+];
+
+/* One depth layer: blurs by its distance from focus, drifts with the cursor, gets a red focus-peaking outline when sharp. */
+const Layer = ({ d, sf, mx, my, depth, className, children }) => {
+    const filter = useTransform(sf, (v) => `blur(${Math.min(26, Math.abs(v - d) * 60)}px)`);
+    const opacity = useTransform(sf, (v) => 1 - Math.min(0.5, Math.abs(v - d)) * 0.8);
+    const scale = useTransform(sf, (v) => 1 + Math.abs(v - d) * 0.06); // focus breathing
+    const peak = useTransform(sf, (v) => (Math.abs(v - d) < 0.07 ? 1 : 0));
+    const x = useTransform(mx, [-0.5, 0.5], [-depth, depth]);
+    const y = useTransform(my, [-0.5, 0.5], [-depth * 0.6, depth * 0.6]);
+    return (
+        <motion.div style={{ filter, opacity, scale, x, y }} className={`absolute ${className}`}>
+            {children}
+            <motion.span style={{ opacity: peak, boxShadow: `0 0 0 1px ${RED}` }} className="absolute -inset-1 pointer-events-none" aria-hidden />
+        </motion.div>
+    );
+};
+
+const BokehDot = ({ cfg: [l, t, s, d, tint], sf }) => {
+    const filter = useTransform(sf, (v) => `blur(${6 + Math.abs(v - d) * 36}px)`);
+    return (
+        <motion.i
+            aria-hidden
+            style={{ filter, left: `${l}%`, top: `${t}%`, width: s, height: s, background: `radial-gradient(circle, ${tint}55 0%, ${tint}22 60%, transparent 70%)` }}
+            className="absolute rounded-full pointer-events-none"
+        />
+    );
+};
+
+const Timecode = () => {
+    const [t, setT] = useState("00:00:00:00");
+    useEffect(() => {
+        const start = performance.now();
+        const p = (n) => String(n).padStart(2, "0");
+        const id = setInterval(() => {
+            const ms = performance.now() - start, s = Math.floor(ms / 1000);
+            setT(`${p(Math.floor(s / 3600))}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}:${p(Math.floor((ms % 1000) / 41.67))}`);
+        }, 83);
+        return () => clearInterval(id);
+    }, []);
+    return <span>{t}</span>;
+};
 
 const Hero = () => {
-    const sectionRef = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: sectionRef,
-        offset: ["start start", "end start"],
-    });
+    const reduce = useReducedMotion();
+    const secRef = useRef(null);
+    const inputRef = useRef(null);
+    const f = useMotionValue(1);
+    const sf = useSpring(f, { stiffness: 70, damping: 20 });
+    const rawX = useMotionValue(0), rawY = useMotionValue(0);
+    const mx = useSpring(rawX, { stiffness: 60, damping: 20 });
+    const my = useSpring(rawY, { stiffness: 60, damping: 20 });
+    const [active, setActive] = useState(1);
+    const [locked, setLocked] = useState(false);
+    const [touched, setTouched] = useState(false);
+    const left = useTransform(sf, (v) => `${v * 100}%`);
 
-    const y = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-    const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-    const scale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+    // opening move: rack focus from far onto the name
+    useEffect(() => {
+        if (reduce) { f.set(0.5); return; }
+        const a = animate(f, 0.5, { duration: 2.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] });
+        return () => a.stop();
+    }, []);
 
-    const scrollToSkills = () => {
-        const section = document.getElementById("skills");
-        section?.scrollIntoView({ behavior: "smooth" });
+    // keep slider, active scene and the AF box in sync with the focus spring
+    useEffect(() => sf.on("change", (v) => {
+        if (inputRef.current) inputRef.current.value = v;
+        let best = 0;
+        STOPS.forEach((s, i) => { if (Math.abs(s.d - v) < Math.abs(STOPS[best].d - v)) best = i; });
+        setActive(best);
+        setLocked(Math.abs(STOPS[best].d - v) < 0.07);
+    }), []);
+
+    const pull = (v) => { setTouched(true); animate(f, v, { duration: 1.1, ease: [0.16, 1, 0.3, 1] }); };
+    const move = (e) => {
+        if (reduce) return;
+        const r = secRef.current.getBoundingClientRect();
+        rawX.set((e.clientX - r.left) / r.width - 0.5);
+        rawY.set((e.clientY - r.top) / r.height - 0.5);
     };
-
-    const scrollToContact = () => {
-        const section = document.getElementById("contact");
-        section?.scrollIntoView({ behavior: "smooth" });
-    }
+    const go = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const stop = STOPS[active];
 
     return (
-        <section
-            ref={sectionRef}
-            className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black"
-        >
-            {/* Darker Vignette over ThreeBackground for focus */}
-            <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none" />
-            
-            <div className="absolute inset-0 z-0">
-               <ThreeBackground />
+        <section ref={secRef} onPointerMove={move} className="relative h-screen min-h-[640px] overflow-hidden bg-[#0a0a0b] text-[#f2efe9]" style={DISPLAY}>
+            {/* depth scene */}
+            <div className="absolute inset-0">
+                {BOKEH.map((b, i) => <BokehDot key={i} cfg={b} sf={sf} />)}
+
+                {/* far: film frame */}
+                <Layer d={0.92} sf={sf} mx={mx} my={my} depth={12} className="right-[4%] bottom-[26%] w-[52%] md:w-[34%] z-0">
+                    <div className="aspect-video relative overflow-hidden" style={bg(FILM)} role="img" aria-label="Film still">
+                        <div className="absolute inset-x-0 top-0 h-[10%] bg-black" />
+                        <div className="absolute inset-x-0 bottom-0 h-[10%] bg-black" />
+                        <span className="absolute left-3 bottom-[13%] text-[10px]" style={MONO}>SC 14 · TAKE 3</span>
+                    </div>
+                </Layer>
+
+                {/* mid: the name */}
+                <Layer d={0.5} sf={sf} mx={mx} my={my} depth={26} className="left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 z-10 px-4">
+                    <h1 className="font-extrabold leading-[0.82] tracking-[-0.04em] text-[24vw] sm:text-[17vw] lg:text-[13vw] whitespace-nowrap">
+                        <span className="block">Ayush</span>
+                        <span className="block pl-[0.5em]">Gupta</span>
+                    </h1>
+                </Layer>
+
+                {/* near: portrait */}
+                <Layer d={0.08} sf={sf} mx={mx} my={my} depth={60} className="left-[4%] top-[16%] w-[40%] md:w-[22%] z-20">
+                    <div className="aspect-[3/4] shadow-[0_40px_80px_rgba(0,0,0,0.6)]" style={bg(PORTRAIT)} role="img" aria-label="Portrait photograph" />
+                </Layer>
             </div>
 
-            {/* Cinematic Glows */}
-            <motion.div
-                style={{ y: useTransform(scrollYProgress, [0, 1], [0, -150]) }}
-                className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-600/30 rounded-full blur-[200px] opacity-70 animate-pulse-glow"
-            />
-            <motion.div
-                style={{ y: useTransform(scrollYProgress, [0, 1], [0, 150]) }}
-                className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-600/30 rounded-full blur-[200px] opacity-70 animate-pulse-glow"
-                transition={{ delay: 2 }}
-            />
+            {/* viewfinder HUD */}
+            <div className="absolute inset-0 pointer-events-none">
+                {["top-4 left-4 border-t border-l", "top-4 right-4 border-t border-r", "bottom-4 left-4 border-b border-l", "bottom-4 right-4 border-b border-r"].map((c) => (
+                    <span key={c} className={`absolute w-8 h-8 border-white/50 ${c}`} />
+                ))}
 
-            {/* Content Container */}
-            <motion.div
-                style={{ y, opacity, scale }}
-                className="relative z-10 w-full max-w-7xl px-6 flex flex-col md:flex-row items-center justify-between gap-12"
-            >
-                {/* Text Side */}
-                <div className="flex-1 text-left w-full">
-                    <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2, duration: 1 }}
-                        className="flex items-center gap-4 mb-6"
-                    >
-                        <div className="h-[1px] w-12 bg-blue-500" />
-                        <span className="text-blue-400 uppercase tracking-[0.3em] text-xs font-bold">
-                            Director · Editor · Photographer
-                        </span>
-                    </motion.div>
-
-                    <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black tracking-tighter leading-[0.85]">
-                        <motion.span
-                            initial={{ opacity: 0, y: 40 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                            className="block text-white"
-                        >
-                            AYUSH
-                        </motion.span>
-                        <motion.span
-                            initial={{ opacity: 0, y: 40 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                            className="block text-[#1a1a1a] style-stroke relative"
-                            style={{ WebkitTextStroke: "2px rgba(255,255,255,0.8)" }}
-                        >
-                            GUPTA
-                            <motion.span 
-                                className="absolute left-0 top-0 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 bg-[length:200%_auto] animate-gradient-x"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 1, duration: 2 }}
-                                style={{ WebkitTextStroke: "0px" }}
-                            >
-                                GUPTA
-                            </motion.span>
-                        </motion.span>
-                    </h1>
-
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8, duration: 1 }}
-                        className="mt-6 text-sm md:text-base uppercase tracking-[0.6em] text-zinc-500 font-medium"
-                    >
-                        Portraitwalagallery
-                    </motion.p>
-
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1, duration: 0.8 }}
-                        className="mt-10 text-zinc-300 text-lg md:text-2xl leading-relaxed max-w-xl font-light"
-                    >
-                        Turning moments into cinematic masterpieces. Specializing in high-end video editing and emotive photography.
-                    </motion.p>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1.2, duration: 0.8 }}
-                        className="mt-12 flex flex-col sm:flex-row gap-6"
-                    >
-                        <button
-                            onClick={scrollToSkills}
-                            className="group relative px-10 py-4 rounded-full bg-white text-black font-bold tracking-wide overflow-hidden transition-all duration-300 hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
-                        >
-                            <span className="relative z-10 transition-colors group-hover:text-blue-600">Explore Portfolio</span>
-                            <div className="absolute inset-0 bg-blue-50/0 group-hover:bg-blue-50/100 transition-colors duration-300" />
-                        </button>
-                        
-                        <button
-                            onClick={scrollToContact}
-                            className="px-10 py-4 rounded-full glass text-white font-semibold tracking-wide hover:border-blue-500 transition-all duration-300 hover:scale-105"
-                        >
-                            Book a Session
-                        </button>
-                    </motion.div>
+                <div className="flex justify-between items-start text-xs sm:text-sm pt-10 px-8 sm:px-12" style={MONO}>
+                    <div className="flex items-center gap-3">
+                        <motion.i animate={reduce ? {} : { opacity: [1, 0.2, 1] }} transition={{ duration: 1.4, repeat: Infinity }} className="w-2.5 h-2.5 rounded-full" style={{ background: RED }} />
+                        REC <Timecode />
+                    </div>
+                    <div className="hidden sm:block text-white/70">ƒ/1.8 · 1/50 · ISO 400</div>
+                    <div className="text-white/70">4K 24p</div>
                 </div>
-                
-                {/* Visual Side (Optional framing or abstract element, empty here for minimalism focus on text and bg) */}
-                <div className="hidden lg:block lg:flex-1 h-full w-full relative">
-                     {/* Can add a floating lens or reel graphic here later, but Three.js is already doing the job beautifully */}
-                </div>
-            </motion.div>
 
-            {/* Scroll Indicator */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 2, duration: 1 }}
-                className="absolute bottom-10 left-6 flex items-center gap-4 origin-left -rotate-90 -translate-x-4"
-            >
-                <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">Scroll Down</span>
-                <div className="w-12 h-[1px] bg-gradient-to-r from-blue-500 to-transparent relative">
-                    <motion.div 
-                        animate={{ x: [0, 48, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-                    />
-                </div>
-            </motion.div>
+                {/* autofocus box: pulses while searching, locks red when a scene is sharp */}
+                <motion.div
+                    animate={{ scale: locked ? 1 : [1, 1.18, 1] }}
+                    transition={locked ? { duration: 0.3 } : { duration: 1.2, repeat: Infinity }}
+                    className="absolute left-1/2 top-[44%] w-20 h-20 -translate-x-1/2 -translate-y-1/2"
+                    style={{ border: `1px solid ${locked ? RED : "rgba(255,255,255,0.4)"}` }}
+                />
 
-            {/* Gradient Mask for Transition */}
-            <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-[#050505] to-transparent pointer-events-none z-10" />
+                {/* caption + actions + lens ring */}
+                <div className="absolute inset-x-0 bottom-0 px-8 sm:px-12 pb-8 sm:pb-10 flex flex-col gap-5">
+                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+                        <div className="max-w-md min-h-[96px]">
+                            <AnimatePresence mode="wait">
+                                <motion.div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
+                                    <p className="text-xs text-white/60 mb-1" style={MONO}>Focus {stop.dist}</p>
+                                    <p className="text-2xl sm:text-3xl font-medium leading-tight">{stop.label}</p>
+                                    <p className="mt-2 text-sm sm:text-base text-white/70" style={{ fontFamily: "system-ui, sans-serif" }}>{stop.text}</p>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+                        <div className="flex gap-3 pointer-events-auto">
+                            <button onClick={() => go("skills")} className="px-7 py-3.5 text-sm font-semibold text-black bg-[#f2efe9] transition hover:-translate-y-0.5">Explore portfolio</button>
+                            <button onClick={() => go("contact")} className="px-7 py-3.5 text-sm font-semibold border border-white/40 backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[#ff4b3e]">Book a session</button>
+                        </div>
+                    </div>
+
+                    <div className="pointer-events-auto">
+                        <div className="relative h-6">
+                            <div className="absolute inset-x-0 top-0 h-5 flex justify-between items-end">
+                                {Array.from({ length: 51 }).map((_, i) => <i key={i} className="w-px bg-white/40" style={{ height: i % 5 === 0 ? 18 : 9 }} />)}
+                            </div>
+                            <motion.i style={{ left, background: RED }} className="absolute top-0 w-0.5 h-6 -translate-x-1/2" aria-hidden />
+                            <input
+                                ref={inputRef}
+                                type="range" min="0" max="1" step="0.005" defaultValue="1"
+                                aria-label="Pull focus from near to far"
+                                onChange={(e) => { setTouched(true); f.set(parseFloat(e.target.value)); }}
+                                className="absolute inset-x-0 top-0 h-6 w-full opacity-0 cursor-ew-resize"
+                            />
+                        </div>
+                        <div className="flex justify-between text-xs text-white/60 mt-1" style={MONO}>
+                            {STOPS.map((s, i) => (
+                                <button key={s.label} onClick={() => pull(s.d)} className={`py-1 transition ${active === i ? "text-white" : "hover:text-white"}`}>{s.label}</button>
+                            ))}
+                        </div>
+                        {!touched && <p className="text-center text-xs mt-2 text-white/50" style={MONO}>Drag the ring to pull focus</p>}
+                    </div>
+                </div>
+            </div>
         </section>
     );
 };
 
-export default Hero;
+export default Hero;
